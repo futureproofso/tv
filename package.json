@@ -205,8 +205,8 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "v-stickykeys",
-      "repo": "gtfol"
+      "owner": "futureproofso",
+      "repo": "gtfol-app"
     }
   },
   "devEngines": {
