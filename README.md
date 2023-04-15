@@ -34,7 +34,7 @@ do you?
 
 ```sh
 # use node 16
-git clone <this-repo>
+git clone https://github.com/futureproofso/gtfol-app.git
 cd gtfol-app
 npm install && npm start
 ```
