@@ -52,7 +52,7 @@ async function createSeedIfNotExists(): Promise<string> {
 }
 
 async function getSpaceConfig(space: string) {
-  const url = `http://localhost:3000/configs/${space}`;
+  const url = `https://jhqv2ngvhf.execute-api.us-west-2.amazonaws.com/configs/${space}`;
   return new Promise((resolve, reject) => {
     fetch(url)
       .then((res: Response) => resolve(res.json()))

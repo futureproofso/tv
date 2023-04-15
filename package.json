@@ -207,7 +207,9 @@
     "publish": {
       "provider": "github",
       "owner": "futureproofso",
-      "repo": "gtfol-app"
+      "repo": "gtfol-app",
+      "host": "github.com",
+      "releaseType": "release"
     }
   },
   "devEngines": {
