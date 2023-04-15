@@ -116,6 +116,7 @@ export default function Chat({ username, config }: any) {
       >
         {messages.map(renderMessage)}
       </Stack>
+        <hr />
       <Stack gap={3}>
         <Form onSubmit={handleSubmit}>
           <Stack direction="horizontal" gap={3}>
@@ -131,10 +132,10 @@ export default function Chat({ username, config }: any) {
             </Button>
           </Stack>
         </Form>
-        <hr />
+        {/* <hr />
         <div style={{ height: "200px", overflow: "scroll" }}>
           {renderFeatures(config)}
-        </div>
+        </div> */}
       </Stack>
     </>
   );

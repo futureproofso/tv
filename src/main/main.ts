@@ -52,12 +52,12 @@ async function createSeedIfNotExists(): Promise<string> {
 }
 
 async function getSpaceConfig(space: string) {
-  const url = `https://jhqv2ngvhf.execute-api.us-west-2.amazonaws.com/configs/${space}`;
-  return new Promise((resolve, reject) => {
-    fetch(url)
-      .then((res: Response) => resolve(res.json()))
-      .catch(reject);
-  });
+  // const url = `https://jhqv2ngvhf.execute-api.us-west-2.amazonaws.com/configs/${space}`;
+  // return new Promise((resolve, reject) => {
+  //   fetch(url)
+  //     .then((res: Response) => resolve(res.json()))
+  //     .catch(reject);
+  // });
 }
 
 function startChatting(window: BrowserWindow, seed: string) {
@@ -103,7 +103,7 @@ function startChatting(window: BrowserWindow, seed: string) {
   ipcMain.on("space-out", async (event, args) => {
     if (args[0] === "connect") {
       const alias = args[1];
-      const config = await getSpaceConfig(alias);
+      // const config = await getSpaceConfig(alias);
       const topic = createHash("sha256").update(alias, "utf-8").digest();
       const discovery = swarm.join(topic, { client: true, server: true });
       // The flushed promise will resolve when the topic has been fully announced to the DHT
@@ -115,7 +115,7 @@ function startChatting(window: BrowserWindow, seed: string) {
             topic: topic.toString("hex"),
             alias,
             error: null,
-            config,
+            config: null,
           };
           window.webContents.send("space-in", JSON.stringify(metadata));
         })
