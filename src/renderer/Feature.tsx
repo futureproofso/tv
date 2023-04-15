@@ -3,6 +3,8 @@ import Form from "react-bootstrap/Form";
 import "./App.css";
 import { useState } from "react";
 import Stack from "react-bootstrap/Stack";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleUp, faSpa } from "@fortawesome/free-solid-svg-icons";
 
 export default function Feature(props: any) {
   const { action } = props;
@@ -24,7 +26,7 @@ export default function Feature(props: any) {
   return (
     <Form onSubmit={handleSubmit}>
       <Stack direction="horizontal" gap={3}>
-        {action} {item === "flower" ? <i className="bi bi-flower3" /> : item}
+        {action} {item === "flower" ? <FontAwesomeIcon icon={faSpa} color="white" /> : item}
         <Form.Control
           className="me-auto"
           type="text"
@@ -33,7 +35,7 @@ export default function Feature(props: any) {
           placeholder="to"
         />
         <Button variant="outline-light" type="submit">
-          <i className="bi bi-arrow-up-circle-fill" />
+          <FontAwesomeIcon icon={faCircleUp} />
         </Button>
       </Stack>
     </Form>
