@@ -13,10 +13,10 @@ import { app, BrowserWindow, shell, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import Hyperswarm from "hyperswarm";
+import Hypercore from "hypercore";
 import goodbye from "graceful-goodbye";
 import crypto from "hypercore-crypto";
 import b4a from "b4a";
-import fetch from "electron-fetch";
 
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
@@ -37,18 +37,24 @@ class AppUpdater {
 
 let db: any;
 async function createTableIfNotExists() {
-  const createTableQuery = `CREATE TABLE IF NOT EXISTS account (seed TEXT)`;
+  const createTableQuery = `CREATE TABLE IF NOT EXISTS account (seed TEXT NOT NULL, username TEXT NULL)`;
   await db.run(createTableQuery, []);
 }
 
-async function createSeedIfNotExists(): Promise<string> {
+async function createAccountIfNotExists(): Promise<any> {
   const row: any = await db.get(`SELECT * FROM account LIMIT 1`);
   if (!row) {
     const seed = crypto.randomBytes(32).toString("hex");
-    await db.run("INSERT INTO account VALUES (?)", seed);
-    return seed;
+    await db.run("INSERT INTO account VALUES (?, ?)", seed, "");
+    return {seed, username: ""};
   }
-  return row.seed;
+  return {seed: row.seed, username: row.username};
+}
+
+async function updateUsername(username: string): Promise<any> {
+  const row: any = await db.get(`SELECT * FROM account LIMIT 1`);
+  const updateQuery = `UPDATE account SET username = '${username}' WHERE seed = ?`;
+  await db.run(updateQuery, row.seed);
 }
 
 async function getSpaceConfig(space: string) {
@@ -60,10 +66,16 @@ async function getSpaceConfig(space: string) {
   // });
 }
 
-function startChatting(window: BrowserWindow, seed: string) {
+function startChatting(window: BrowserWindow, seed: string, username: string) {
   const swarm = new Hyperswarm({ seed: b4a.from(seed, "hex"), maxPeers: 31 });
   const publicKey = b4a.toString(swarm.keyPair.publicKey, "hex");
   goodbye(() => swarm.destroy());
+
+  const core = new Hypercore('./writer-storage');
+  // core.key and core.discoveryKey will only be set after core.ready resolves
+  core.ready().then(() => {
+    console.log('hypercore key:', b4a.toString(core.key, 'hex'));
+  }).catch(console.error);
 
   // Keep track of all connections and console.log incoming data
   const conns: any = [];
@@ -71,6 +83,7 @@ function startChatting(window: BrowserWindow, seed: string) {
     const name = b4a.toString(conn.remotePublicKey, "hex");
     console.log("* got a connection from:", name, "*");
     conns.push(conn);
+    core.replicate(conn);
     conn.once("close", () => conns.splice(conns.indexOf(conn), 1));
     conn.on("data", (data: Buffer) => {
       const message = b4a.toString(data, "utf-8");
@@ -85,8 +98,21 @@ function startChatting(window: BrowserWindow, seed: string) {
     conn.on("error", console.error);
   });
 
-  ipcMain.on("account-out", async () => {
-    window.webContents.send("account-in", publicKey);
+  ipcMain.on("account-out", async (event, args) => {
+    if (args[0] === "update") {
+      console.log('new username', args[1]);
+      const username = args[1];
+      await updateUsername(username);
+      const data = {
+        peer: publicKey,
+        username
+      }
+      core.append(JSON.stringify(data));
+    } else if (username) {
+      window.webContents.send("account-in", username);
+    } else {
+      window.webContents.send("account-in", publicKey);
+    }
   });
 
   // send to peers
@@ -106,6 +132,9 @@ function startChatting(window: BrowserWindow, seed: string) {
       // const config = await getSpaceConfig(alias);
       const topic = createHash("sha256").update(alias, "utf-8").digest();
       const discovery = swarm.join(topic, { client: true, server: true });
+      // core.discoveryKey is *not* a read capability for the core
+      // It's only used to discover other peers who *might* have the core
+      swarm.join(core.discoveryKey)
       // The flushed promise will resolve when the topic has been fully announced to the DHT
       discovery
         .flushed()
@@ -196,16 +225,16 @@ const createWindow = async () => {
   });
 
   open({
-    filename: "/tmp/database.db",
+    filename: "./sqlite.db",
     driver: sqlite3.Database,
   })
     .then(async (database: any) => {
       db = database;
       await createTableIfNotExists();
-      const seed = await createSeedIfNotExists();
-      console.log("seed", seed);
+      const account = await createAccountIfNotExists();
+      console.log("seed", account.seed);
       if (mainWindow) {
-        startChatting(mainWindow, seed);
+        startChatting(mainWindow, account.seed, account.username);
       }
     })
     .catch(console.error);

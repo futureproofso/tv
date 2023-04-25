@@ -7,6 +7,7 @@ import Spinner from "react-bootstrap/Spinner";
 import "./App.css";
 import { useEffect, useState } from "react";
 import Chat from "./Chat";
+import Username from "./Username";
 
 interface Config {
   pk: string;
@@ -28,6 +29,10 @@ function send(name: string) {
   window.electron.ipcRenderer.sendMessage("space-out", ["connect", name]);
 }
 
+function updateUsername(name: string) {
+  window.electron.ipcRenderer.sendMessage("account-out", ["update", name]);
+}
+
 function getUsername() {
   window.electron.ipcRenderer.sendMessage("account-out", []);
 }
@@ -47,7 +52,7 @@ export default function Space() {
       removeListener = window.electron.ipcRenderer.on(
         "account-in",
         (data: any) => {
-          setUsername(data.substring(0, 5));
+          setUsername(data.substring(0, 10));
         }
       );
     }
@@ -113,7 +118,7 @@ export default function Space() {
         <Navbar bg="light" fixed="top">
           <Container>
             <Navbar.Brand href="#home">
-              @ {username} # {inputValue}
+              <Username username={username} app={inputValue} send={updateUsername}/>
             </Navbar.Brand>
             <Navbar.Toggle />
             <Navbar.Collapse className="justify-content-end">

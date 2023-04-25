@@ -20,7 +20,7 @@ our software empowers technologists of all kinds to build a better web
 
 we've spent the past 2 years teaching people how to build and work in web3/blockchain/dweb
 
-we helped over half of our community get paid roles in the space
+we helped over 30% of our community get paid $ roles in the space
 
 we grew to 500+ members who are women, people of color, queer, trans, and non-binary folks
 
@@ -32,10 +32,11 @@ do you?
 
 ## let's do this
 
+your own personal chat app
 ```sh
 # use node 16
 git clone https://github.com/futureproofso/gtfol-app.git
-cd gtfol-app
+cd gtfol-app/holepunch-electron-chat
 npm install && npm start
 ```
 
