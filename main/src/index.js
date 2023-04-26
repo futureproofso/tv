@@ -2,60 +2,105 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
 const Hyperswarm = require('hyperswarm');
-const Hypercore = require('hypercore');
 const goodbye = require('graceful-goodbye');
 const b4a = require('b4a');
-const api = require('./api');
+const { createHash } = require("crypto");
 
-console.log(__dirname)
+const api = require('./api');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-async function startAddressBook(mainWindow) {
-  const swarm = new Hyperswarm()
+async function p2p(mainWindow) {
+  const swarm = new Hyperswarm();
   const peerPublicKey = b4a.toString(swarm.keyPair.publicKey, "hex");
   console.log('peer public key', peerPublicKey);
 
-  goodbye(() => swarm.destroy())
+  goodbye(() => swarm.destroy());
 
-  const core = new Hypercore('./storage')
+  // Keep track of all connections and console.log incoming data
+  const conns = [];
+  swarm.on("connection", (conn) => {
+    const name = b4a.toString(conn.remotePublicKey, "hex");
+    console.log("* got a connection from:", name, "*");
+    conns.push(conn);
+    conn.once("close", () => conns.splice(conns.indexOf(conn), 1));
+    conn.on("data", (data) => {
+      const message = b4a.toString(data, "utf-8");
+      const id = createHash("md5")
+        .update(`n:${name}:m:${message}:t:${Date.now()}`)
+        .digest("hex");
+      window.webContents.send(
+        "chat-in",
+        JSON.stringify({ id, from: name, message })
+      );
+    });
+    conn.on("error", console.error);
+  });
 
-  // core.key and core.discoveryKey will only be set after core.ready resolves
-  await core.ready()
-  console.log('hypercore key:', b4a.toString(core.key, 'hex'))
+  // const core = new Hypercore('./storage');
+  const core = null
 
-  // Append all stdin data as separate blocks to the core
-  // process.stdin.on('data', data => core.append(data))
+  // // core.key and core.discoveryKey will only be set after core.ready resolves
+  // await core.ready()
+  // console.log('hypercore key:', b4a.toString(core.key, 'hex'))
 
-  const foundPeers = core.findingPeers()
+  // // Append all stdin data as separate blocks to the core
+  // // process.stdin.on('data', data => core.append(data))
 
-  // core.discoveryKey is *not* a read capability for the core
-  // It's only used to discover other peers who *might* have the core
-  swarm.join(core.discoveryKey)
-  swarm.on('connection', conn => core.replicate(conn))
+  // const foundPeers = core.findingPeers()
 
-  // swarm.flush() will wait until *all* discoverable peers have been connected to
-  // It might take a while, so don't await it
-  // Instead, use core.findingPeers() to mark when the discovery process is completed
-  swarm.flush().then(() => foundPeers())
+  // // core.discoveryKey is *not* a read capability for the core
+  // // It's only used to discover other peers who *might* have the core
+  // swarm.join(core.discoveryKey)
+  // swarm.on('connection', conn => core.replicate(conn))
 
-  ipcMain.on('set-space', (event, ...args) => api.setSpace(event, core, ...args));
+  // // swarm.flush() will wait until *all* discoverable peers have been connected to
+  // // It might take a while, so don't await it
+  // // Instead, use core.findingPeers() to mark when the discovery process is completed
+  // swarm.flush().then(() => foundPeers())
+  ipcMain.on("space-out", async (event, args) => {
+    if (args[0] === "connect") {
+      const alias = args[1];
+      // const config = await getSpaceConfig(alias);
+
+    }
+  });
+
+  ipcMain.on('set-space', (event, ...args) => {
+    const alias = args[0];
+    api.setSpace(event, core, alias);
+    const topic = createHash("sha256").update(alias, "utf-8").digest();
+    const discovery = swarm.join(topic, { client: true, server: true });
+    // The flushed promise will resolve when the topic has been fully announced to the DHT
+    discovery
+      .flushed()
+      .then(() => {
+        console.log("joined topic:", topic.toString("hex"));
+        const metadata = {
+          topic: topic.toString("hex"),
+          alias,
+          error: null,
+          config: null,
+        };
+      })
+      .catch(console.error);
+  });
   ipcMain.on('set-username', (event, ...args) => api.setUsername(event, core, peerPublicKey, ...args));
 
   // This won't resolve until either
   //    a) the first peer is found
   // or b) no peers could be found
-  await core.update();
+  // await core.update();
 
-  let position = core.length;
-  console.log(`Skipping ${core.length} earlier blocks...`);
-  for await (const block of core.createReadStream({ start: core.length, live: true })) {
-    // console.log(`Block ${position++}: ${block}`);
-    mainWindow.webContents.send('got-username', `${block}`);
-  }
+  // let position = core.length;
+  // console.log(`Skipping ${core.length} earlier blocks...`);
+  // for await (const block of core.createReadStream({ start: core.length, live: true })) {
+  //   // console.log(`Block ${position++}: ${block}`);
+  //   mainWindow.webContents.send('got-username', `${block}`);
+  // }
 }
 
 const createWindow = () => {
@@ -70,7 +115,7 @@ const createWindow = () => {
 
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'index.html')).then(() => {
-    startAddressBook(mainWindow);
+    p2p(mainWindow);
   });
 
   // Open the DevTools.
