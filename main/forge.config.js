@@ -25,9 +25,9 @@ module.exports = {
       config: {
         repository: {
           owner: 'futureproofso',
-          name: 'gtfol'
+          name: 'gtfol-app'
         },
-        prerelease: true
+        prerelease: false
       }
     }
   ]
