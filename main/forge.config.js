@@ -19,4 +19,16 @@ module.exports = {
       config: {},
     },
   ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'futureproofso',
+          name: 'gtfol'
+        },
+        prerelease: true
+      }
+    }
+  ]
 };
