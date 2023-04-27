@@ -13,6 +13,7 @@
         "corestore": "^6.5.1",
         "debounceify": "^1.0.0",
         "graceful-goodbye": "^1.2.1",
+        "gun": "^0.2020.1239",
         "hyperbee": "^2.7.3",
         "hypercore": "^10.8.1",
         "hyperdrive": "^11.0.0-alpha.10",

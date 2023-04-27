@@ -8,20 +8,26 @@ const { createHash } = require("crypto");
 const { Sequelize } = require('sequelize');
 
 const api = require('./api');
-const { setupDb, getSeed } = require('./db/private');
+const privateDb = require('./db/private');
+const publicDb = require('./db/public');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-async function p2p(mainWindow, seed) {
+async function p2p(mainWindow, { isNew, seed }) {
   const swarm = new Hyperswarm({ seed: b4a.from(seed, 'hex'), maxPeers: 31 });
 
   const peerPublicKey = b4a.toString(swarm.keyPair.publicKey, 'hex');
   console.log('peer public key:', peerPublicKey);
 
   goodbye(() => swarm.destroy());
+
+  publicDb.setup({isNew, seed, username: peerPublicKey});
+
+  // TODO: get it from db
+  mainWindow.webContents.send('got-username', null, peerPublicKey);
 
   // Keep track of all connections and console.log incoming data
   const conns = [];
@@ -84,7 +90,17 @@ async function p2p(mainWindow, seed) {
       })
       .catch(console.error);
   });
-  ipcMain.on('set-username', (event, ...args) => api.setUsername(event, core, peerPublicKey, ...args));
+
+  ipcMain.on('set-username', (event, data) => {
+    const { app, username } = JSON.parse(data);
+    console.log('setting username...')
+    console.log('app:', app)
+    console.log('username:', username)
+    privateDb.setUsername(app, username);
+    publicDb.publishUsername({ peerPublicKey, username, app });
+    mainWindow.webContents.send('got-username', app, username);
+  });
+
   ipcMain.on("send-message", async (event, args) => {
     conns.forEach((conn) => {
       const message = b4a.from(args, "utf-8");
@@ -117,9 +133,9 @@ const createWindow = () => {
 
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'index.html')).then(() => {
-    setupDb().then(async () => {
-      const seed = await getSeed()
-      p2p(mainWindow, seed);
+    privateDb.setup().then(async () => {
+      const {seed, created} = await privateDb.getSeed()
+      p2p(mainWindow, { isNew: created, seed });
     }).catch(console.error);
   });
 

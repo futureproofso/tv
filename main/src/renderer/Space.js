@@ -1,19 +1,50 @@
-const button = document.getElementById('space-send-button');
-const input = document.getElementById('space-send-input');
+const spaceName = document.getElementById('space-name');
+const sendButton = document.getElementById('space-send-button');
+const sendInput = document.getElementById('space-send-input');
+const username = document.getElementById('space-username');
+const usernameForm = document.getElementById('space-username-form');
+const usernameButton = document.getElementById('space-username-button');
+const usernameInput = document.getElementById('space-username-input');
 const messages = document.getElementById('space-messages');
 const messageOtherTemplate = document.getElementById('space-message-other-template')
 const messageSelfTemplate = document.getElementById('space-message-self-template');
 
-button.addEventListener('click', (e) => {
+window.electron.ipcRenderer.on('got-username', (space, value) => {
+  username.innerText = value;
+  usernameInput.setAttribute('placeholder', value);
+});
+
+username.addEventListener('click', (e) => {
   e.preventDefault();
-  window.electron.ipcRenderer.sendMessage('send-message', input.value);
+
+  username.setAttribute('hidden', true);
+  usernameForm.removeAttribute('hidden');
+})
+
+usernameButton.addEventListener('click', (e) => {
+  e.preventDefault();
+  console.log('will set to', usernameInput.value);
+  window.electron.ipcRenderer.sendMessage(
+    'set-username',
+    JSON.stringify({
+      app: spaceName.innerText,
+      username: usernameInput.value
+    })
+  );
+  usernameForm.setAttribute('hidden', true);
+  username.removeAttribute('hidden');
+});
+
+sendButton.addEventListener('click', (e) => {
+  e.preventDefault();
+  window.electron.ipcRenderer.sendMessage('send-message', sendInput.value);
 
   const clone = messageSelfTemplate.content.cloneNode(true);
   let p = clone.querySelectorAll("p");
-  p[0].innerText = input.value;
+  p[0].innerText = sendInput.value;
   messages.appendChild(clone);
   messages.lastElementChild.scrollIntoView();
-  input.value = "";
+  sendInput.value = "";
 });
 
 window.electron.ipcRenderer.on('got-message', (value) => {

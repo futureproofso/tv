@@ -1,7 +1,12 @@
 <main id="space-template" hidden>
     <div class="row d-flex justify-content-center">
         <div class="card-header d-flex p-3">
-            @ <h5 id="space-username"></h5> # <h5 id="space-name" class="mb-0"></h5>
+            @ <h5 id="space-username" class="mb-0"></h5>
+            <form id="space-username-form" hidden>
+                <input id="space-username-input" type="text" class="form-control" placeholder="" />
+                <button id="space-username-button" class="ms-3" href="#!">save<i class="fas fa-paper-plane"></i></button>
+            </form>
+            # <h5 id="space-name" class="mb-0"></h5>
         </div>
         <div id="space-messages" class="card-body overflow-auto" data-mdb-perfect-scrollbar="true" style="position: relative; height: 400px">
         </div>

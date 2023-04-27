@@ -7,12 +7,6 @@ function setSpace(event, core, appName) {
   win.setTitle(appName);
 }
 
-function setUsername(event, core, publicKey, username) {
-  console.log(`setting username for peer ${publicKey}:`, username);
-  core.append(JSON.stringify({publicKey, username}));
-}
-
 module.exports = {
   setSpace,
-  setUsername
 }

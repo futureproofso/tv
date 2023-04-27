@@ -11,7 +11,12 @@ const Account = db.define('Account', {
   seed: DataTypes.TEXT
 });
 
-async function setupDb() {
+const Username = db.define('Username', {
+  app: DataTypes.TEXT,
+  username: DataTypes.TEXT
+});
+
+async function setup() {
   // remove for prod and handle schema migrations.
   await db.sync({ force: false });
 }
@@ -21,10 +26,18 @@ async function getSeed() {
     where: {id: 1},
     defaults: { seed: crypto.randomBytes(32).toString("hex") }
   })
-  return row.seed;
+  return { seed: row.seed, created };
+}
+
+async function setUsername(app, username) {
+  const [row, _] = await Username.upsert({
+    app,
+    username
+  });
 }
 
 module.exports = {
   getSeed,
-  setupDb
+  setup,
+  setUsername
 };
