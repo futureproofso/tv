@@ -5,18 +5,21 @@ const Hyperswarm = require('hyperswarm');
 const goodbye = require('graceful-goodbye');
 const b4a = require('b4a');
 const { createHash } = require("crypto");
+const { Sequelize } = require('sequelize');
 
 const api = require('./api');
+const { setupDb, getSeed } = require('./db/private');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-async function p2p(mainWindow) {
-  const swarm = new Hyperswarm();
-  const peerPublicKey = b4a.toString(swarm.keyPair.publicKey, "hex");
-  console.log('peer public key', peerPublicKey);
+async function p2p(mainWindow, seed) {
+  const swarm = new Hyperswarm({ seed: b4a.from(seed, 'hex'), maxPeers: 31 });
+
+  const peerPublicKey = b4a.toString(swarm.keyPair.publicKey, 'hex');
+  console.log('peer public key:', peerPublicKey);
 
   goodbye(() => swarm.destroy());
 
@@ -114,7 +117,10 @@ const createWindow = () => {
 
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'index.html')).then(() => {
-    p2p(mainWindow);
+    setupDb().then(async () => {
+      const seed = await getSeed()
+      p2p(mainWindow, seed);
+    }).catch(console.error);
   });
 
   // Open the DevTools.

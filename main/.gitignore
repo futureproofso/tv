@@ -96,3 +96,5 @@ out/
 src/renderer/bundle
 src/pages/bundle
 storage
+db
+!src/db
