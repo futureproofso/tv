@@ -33,12 +33,20 @@ do you?
 ## let's do this
 
 your own personal chat app
-```sh
-# use node 16
-git clone https://github.com/futureproofso/gtfol-app.git
-cd gtfol-app/holepunch-electron-chat
-npm install && npm start
-```
+
+| Install for Mac (Intel) |
+| ----------- |
+| [![Download gtfol](https://img.shields.io/badge/download-main.zip-blue?style=for-the-badge)](https://github.com/futureproofso/gtfol-app/releases/download/v0.0.2/main-darwin-x64-0.0.2.zip)|
+
+![screenshot](./assets/screenshot.png)
+
+after installing, double click `main.app` you'll get a message saying the developer can not be verified.
+
+click "cancel" then go into your securiy and privacy preferences and click "open anyway".
+
+![security and privacy](./assets/security.png)
+
+[license](./LICENSE) and [terms](./TERMS)
 
 ## don't be a stranger
 
