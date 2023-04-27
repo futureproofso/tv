@@ -32,8 +32,8 @@ async function p2p(mainWindow) {
       const id = createHash("md5")
         .update(`n:${name}:m:${message}:t:${Date.now()}`)
         .digest("hex");
-      window.webContents.send(
-        "chat-in",
+      mainWindow.webContents.send(
+        "got-message",
         JSON.stringify({ id, from: name, message })
       );
     });
@@ -61,13 +61,6 @@ async function p2p(mainWindow) {
   // // It might take a while, so don't await it
   // // Instead, use core.findingPeers() to mark when the discovery process is completed
   // swarm.flush().then(() => foundPeers())
-  ipcMain.on("space-out", async (event, args) => {
-    if (args[0] === "connect") {
-      const alias = args[1];
-      // const config = await getSpaceConfig(alias);
-
-    }
-  });
 
   ipcMain.on('set-space', (event, ...args) => {
     const alias = args[0];
@@ -83,12 +76,18 @@ async function p2p(mainWindow) {
           topic: topic.toString("hex"),
           alias,
           error: null,
-          config: null,
+          config: null, // get this from db
         };
       })
       .catch(console.error);
   });
   ipcMain.on('set-username', (event, ...args) => api.setUsername(event, core, peerPublicKey, ...args));
+  ipcMain.on("send-message", async (event, args) => {
+    conns.forEach((conn) => {
+      const message = b4a.from(args, "utf-8");
+      conn.write(message);
+    });
+  });
 
   // This won't resolve until either
   //    a) the first peer is found

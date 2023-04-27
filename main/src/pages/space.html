@@ -1,0 +1,30 @@
+<main id="space-template" hidden>
+    <div class="row d-flex justify-content-center">
+        <div class="card-header d-flex p-3">
+            @ <h5 id="space-username"></h5> # <h5 id="space-name" class="mb-0"></h5>
+        </div>
+        <div id="space-messages" class="card-body overflow-auto" data-mdb-perfect-scrollbar="true" style="position: relative; height: 400px">
+        </div>
+        <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
+            <input id="space-send-input" type="text" class="form-control form-control-lg" placeholder="say something!">
+            <button id="space-send-button" class="ms-3" href="#!">send<i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</main>
+
+<template id="space-message-other-template">
+    <div class="d-flex flex-row justify-content-start">
+        <div>
+            <p class="small p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7;"></p>
+            <p class="small ms-3 mb-3 rounded-3 text-muted"></p>
+        </div>
+    </div>
+</template>
+
+<template id="space-message-self-template">
+    <div class="d-flex flex-row justify-content-end mb-4 pt-1">
+        <div>
+            <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary"></p>
+        </div>
+    </div>
+</template>
