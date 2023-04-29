@@ -3,7 +3,7 @@ const crypto = require("hypercore-crypto");
 
 const db = new Sequelize({
   dialect: 'sqlite',
-  storage: './db/private.sqlite',
+  storage: './storage/private.sqlite',
   logging: false
 });
 

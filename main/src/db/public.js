@@ -1,11 +1,14 @@
 const Gun = require('gun');
 const {createServer} = require('http');
+const path = require('path');
+const { app } = require('electron');
 
 const server = createServer(Gun.serve(__dirname)).listen('8765', () => {
 	console.log('Relay peer started on port 8765 with /gun');
 });
 
-const gun = Gun({web: server});
+const file = path.resolve(app.getAppPath(), 'storage', 'db_public_radata');
+const gun = Gun({file, web: server});
 const user = gun.user();
 
 function setup({ isNew, seed, username }) {
@@ -15,7 +18,6 @@ function setup({ isNew, seed, username }) {
   } else {
     user.auth(username, seed, (res) => {
       if (res.err) {
-        console.log('err', res.err)
         user.create(username, seed)
       }
     })

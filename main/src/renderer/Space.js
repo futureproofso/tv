@@ -23,7 +23,6 @@ username.addEventListener('click', (e) => {
 
 usernameButton.addEventListener('click', (e) => {
   e.preventDefault();
-  console.log('will set to', usernameInput.value);
   window.electron.ipcRenderer.sendMessage(
     'set-username',
     JSON.stringify({

@@ -7,6 +7,18 @@ const b4a = require('b4a');
 const { createHash } = require("crypto");
 const { Sequelize } = require('sequelize');
 
+const { mkdirSync } = require('fs');
+const storageDir = path.resolve(app.getAppPath(), 'storage');
+try {
+  mkdirSync(storageDir);
+} catch (error) {
+  if (error.code === 'EEXIST') {
+    // pass
+  } else {
+    throw error
+  }
+}
+
 const api = require('./api');
 const privateDb = require('./db/private');
 const publicDb = require('./db/public');
