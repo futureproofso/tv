@@ -26,7 +26,15 @@ function setup({ isNew, seed, username }) {
 
 function publishUsername({ peerPublicKey, username, app }) {
   gun.get(`${app}-usernames`).put({
-    [username]: peerPublicKey
+    [peerPublicKey]: username
+  });
+}
+
+async function getUsername({ peerPublicKey, app }) {
+  return new Promise((resolve, reject) => {
+    gun.get(`${app}-usernames`).get(peerPublicKey).once((value) => {
+      resolve(value);
+    });
   });
 }
 
@@ -38,5 +46,6 @@ function receiveUsernames(app) {
 
 module.exports = {
   setup,
-  publishUsername
+  publishUsername,
+  getUsername
 };

@@ -38,7 +38,6 @@ async function p2p(mainWindow, { isNew, seed }) {
 
   publicDb.setup({isNew, seed, username: peerPublicKey});
 
-  // TODO: get it from db
   mainWindow.webContents.send('got-username', null, peerPublicKey);
 
   // Keep track of all connections and console.log incoming data
@@ -86,6 +85,11 @@ async function p2p(mainWindow, { isNew, seed }) {
   ipcMain.on('set-space', (event, ...args) => {
     const alias = args[0];
     api.setSpace(event, core, alias);
+    publicDb.getUsername({ peerPublicKey, app: alias }).then((username) => {
+      if (username) {
+        mainWindow.webContents.send('got-username', alias, username);
+      }
+    });
     const topic = createHash("sha256").update(alias, "utf-8").digest();
     const discovery = swarm.join(topic, { client: true, server: true });
     // The flushed promise will resolve when the topic has been fully announced to the DHT
