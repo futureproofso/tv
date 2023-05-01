@@ -1,9 +1,11 @@
+const path = require('path');
 const { Sequelize, Model, DataTypes } = require('sequelize');
 const crypto = require("hypercore-crypto");
+const { directory } = require('./setup');
 
 const db = new Sequelize({
   dialect: 'sqlite',
-  storage: './storage/private.sqlite',
+  storage: path.resolve(directory, 'private.sqlite'), // this can fail without throwing an error
   logging: false
 });
 
@@ -12,7 +14,7 @@ const Account = db.define('Account', {
 });
 
 const Username = db.define('Username', {
-  app: DataTypes.TEXT,
+  appName: DataTypes.TEXT,
   username: DataTypes.TEXT
 });
 
@@ -29,9 +31,9 @@ async function getSeed() {
   return { seed: row.seed, created };
 }
 
-async function setUsername(app, username) {
+async function setUsername(appName, username) {
   const [row, _] = await Username.upsert({
-    app,
+    appName,
     username
   });
 }

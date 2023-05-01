@@ -5,15 +5,6 @@
 /* eslint no-unused-vars: off */
 const { contextBridge, ipcRenderer, IpcRendererEvent } = require("electron");
 
-const IPC_EXAMPLE = "ipc-example";
-const SET_TITLE = "set-title";
-const GOT_USERNAME = "got-username";
-
-const Channels = {
-  IPC_EXAMPLE,
-  SET_TITLE
-}
-
 const electronHandler = {
   ipcRenderer: {
     sendMessage(channel, args) {

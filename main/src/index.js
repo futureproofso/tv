@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain } = require('electron');
 const path = require('path');
 
 const Hyperswarm = require('hyperswarm');
@@ -7,36 +7,26 @@ const b4a = require('b4a');
 const { createHash } = require("crypto");
 const { Sequelize } = require('sequelize');
 
-const { mkdirSync } = require('fs');
-const storageDir = path.resolve(app.getAppPath(), 'storage');
-try {
-  mkdirSync(storageDir);
-} catch (error) {
-  if (error.code === 'EEXIST') {
-    // pass
-  } else {
-    throw error
-  }
-}
-
-const api = require('./api');
+require('./db/setup').setup();
 const privateDb = require('./db/private');
-const publicDb = require('./db/public');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-async function p2p(mainWindow, { isNew, seed }) {
+async function main(mainWindow, { isNew, seed }) {
+  // const p2p = new BrowserView({
+  //   webPreferences: {
+  //     preload: path.join(__dirname, 'p2p/preload.js'),
+  //   },
+  // });
   const swarm = new Hyperswarm({ seed: b4a.from(seed, 'hex'), maxPeers: 31 });
 
   const peerPublicKey = b4a.toString(swarm.keyPair.publicKey, 'hex');
   console.log('peer public key:', peerPublicKey);
 
   goodbye(() => swarm.destroy());
-
-  publicDb.setup({isNew, seed, username: peerPublicKey});
 
   mainWindow.webContents.send('got-username', null, peerPublicKey);
 
@@ -60,37 +50,9 @@ async function p2p(mainWindow, { isNew, seed }) {
     conn.on("error", console.error);
   });
 
-  // const core = new Hypercore('./storage');
-  const core = null
-
-  // // core.key and core.discoveryKey will only be set after core.ready resolves
-  // await core.ready()
-  // console.log('hypercore key:', b4a.toString(core.key, 'hex'))
-
-  // // Append all stdin data as separate blocks to the core
-  // // process.stdin.on('data', data => core.append(data))
-
-  // const foundPeers = core.findingPeers()
-
-  // // core.discoveryKey is *not* a read capability for the core
-  // // It's only used to discover other peers who *might* have the core
-  // swarm.join(core.discoveryKey)
-  // swarm.on('connection', conn => core.replicate(conn))
-
-  // // swarm.flush() will wait until *all* discoverable peers have been connected to
-  // // It might take a while, so don't await it
-  // // Instead, use core.findingPeers() to mark when the discovery process is completed
-  // swarm.flush().then(() => foundPeers())
-
-  ipcMain.on('set-space', (event, ...args) => {
-    const alias = args[0];
-    api.setSpace(event, core, alias);
-    publicDb.getUsername({ peerPublicKey, app: alias }).then((username) => {
-      if (username) {
-        mainWindow.webContents.send('got-username', alias, username);
-      }
-    });
-    const topic = createHash("sha256").update(alias, "utf-8").digest();
+  ipcMain.on('set-space', (event, appName) => {
+    mainWindow.setTitle(appName);
+    const topic = createHash("sha256").update(appName, "utf-8").digest();
     const discovery = swarm.join(topic, { client: true, server: true });
     // The flushed promise will resolve when the topic has been fully announced to the DHT
     discovery
@@ -99,7 +61,7 @@ async function p2p(mainWindow, { isNew, seed }) {
         console.log("joined topic:", topic.toString("hex"));
         const metadata = {
           topic: topic.toString("hex"),
-          alias,
+          appName,
           error: null,
           config: null, // get this from db
         };
@@ -108,13 +70,16 @@ async function p2p(mainWindow, { isNew, seed }) {
   });
 
   ipcMain.on('set-username', (event, data) => {
-    const { app, username } = JSON.parse(data);
+    const { appName, username } = JSON.parse(data);
     console.log('setting username...')
-    console.log('app:', app)
+    console.log('appName:', appName)
     console.log('username:', username)
-    privateDb.setUsername(app, username);
-    publicDb.publishUsername({ peerPublicKey, username, app });
-    mainWindow.webContents.send('got-username', app, username);
+    privateDb.setUsername(appName, username);
+    // TODO: different keys for each app
+    swarm.dht.mutablePut(swarm.keyPair, Buffer.from(username)).then(() => {
+      console.log('published username');
+    });
+    mainWindow.webContents.send('got-username', appName, username);
   });
 
   ipcMain.on("send-message", async (event, args) => {
@@ -123,18 +88,6 @@ async function p2p(mainWindow, { isNew, seed }) {
       conn.write(message);
     });
   });
-
-  // This won't resolve until either
-  //    a) the first peer is found
-  // or b) no peers could be found
-  // await core.update();
-
-  // let position = core.length;
-  // console.log(`Skipping ${core.length} earlier blocks...`);
-  // for await (const block of core.createReadStream({ start: core.length, live: true })) {
-  //   // console.log(`Block ${position++}: ${block}`);
-  //   mainWindow.webContents.send('got-username', `${block}`);
-  // }
 }
 
 const createWindow = () => {
@@ -151,8 +104,16 @@ const createWindow = () => {
   mainWindow.loadFile(path.join(__dirname, 'index.html')).then(() => {
     privateDb.setup().then(async () => {
       const {seed, created} = await privateDb.getSeed()
-      p2p(mainWindow, { isNew: created, seed });
-    }).catch(console.error);
+      main(mainWindow, { isNew: created, seed }).then(() => {
+        console.log('main complete');
+      }).catch((err) => {
+        console.error('caught from main', err);
+        app.quit();
+      });
+    }).catch((error) => {
+      console.error(error);
+      app.quit();
+    });
   });
 
   // Open the DevTools.

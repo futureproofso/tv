@@ -9,7 +9,8 @@ const messages = document.getElementById('space-messages');
 const messageOtherTemplate = document.getElementById('space-message-other-template')
 const messageSelfTemplate = document.getElementById('space-message-self-template');
 
-window.electron.ipcRenderer.on('got-username', (space, value) => {
+window.electron.ipcRenderer.on('got-username', (appName, value) => {
+  console.log('got-username handler', appName, value);
   username.innerText = value;
   usernameInput.setAttribute('placeholder', value);
 });
@@ -26,7 +27,7 @@ usernameButton.addEventListener('click', (e) => {
   window.electron.ipcRenderer.sendMessage(
     'set-username',
     JSON.stringify({
-      app: spaceName.innerText,
+      appName: spaceName.innerText,
       username: usernameInput.value
     })
   );
