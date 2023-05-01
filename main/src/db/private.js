@@ -20,7 +20,7 @@ const Username = db.define('Username', {
 
 async function setup() {
   // remove for prod and handle schema migrations.
-  await db.sync({ force: false });
+  await db.sync({ force: true });
 }
 
 async function getSeed() {
