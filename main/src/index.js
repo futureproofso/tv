@@ -15,6 +15,8 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+const usernameCache = {};
+
 async function main(mainWindow, { isNew, seed }) {
   // const p2p = new BrowserView({
   //   webPreferences: {
@@ -33,20 +35,41 @@ async function main(mainWindow, { isNew, seed }) {
   // Keep track of all connections and console.log incoming data
   const conns = [];
   swarm.on("connection", (conn) => {
-    const name = b4a.toString(conn.remotePublicKey, "hex");
-    console.log("* got a connection from:", name, "*");
+    const remotePublicKey = b4a.toString(conn.remotePublicKey, "hex");
+    console.log("* got a connection from:", remotePublicKey, "*");
     conns.push(conn);
+
     conn.once("close", () => conns.splice(conns.indexOf(conn), 1));
-    conn.on("data", (data) => {
+
+    conn.on("data", async (data) => {
       const message = b4a.toString(data, "utf-8");
       const id = createHash("md5")
-        .update(`n:${name}:m:${message}:t:${Date.now()}`)
+        .update(`n:${remotePublicKey}:m:${message}:t:${Date.now()}`)
         .digest("hex");
-      mainWindow.webContents.send(
-        "got-message",
-        JSON.stringify({ id, from: name, message })
+
+      if (!usernameCache[remotePublicKey]) {
+        usernameCache[remotePublicKey] = {
+          username: undefined,
+          lookupAttempts: 0
+        }
+      }
+      if (
+        !usernameCache[remotePublicKey].username
+        && usernameCache[remotePublicKey].lookupAttempts < 2
+      ) {
+        usernameCache[remotePublicKey].lookupAttempts++;
+        const data = await swarm.dht.mutableGet(conn.remotePublicKey);
+        usernameCache[remotePublicKey].username = data.value.toString('utf8');
+      }
+
+      mainWindow.webContents.send('got-message', JSON.stringify({
+          id,
+          from: usernameCache[remotePublicKey].username || remotePublicKey,
+          message
+        })
       );
     });
+
     conn.on("error", console.error);
   });
 
