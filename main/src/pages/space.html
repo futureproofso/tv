@@ -1,18 +1,26 @@
 <main id="space-template" hidden>
     <div class="row d-flex justify-content-center">
-        <div class="card-header d-flex flex-row justify-content-end p-3">
-            @ <h5 id="space-username" class="mb-0"></h5>
-            <form id="space-username-form" hidden>
-                <input id="space-username-input" type="text" class="form-control" placeholder="" />
-                <button id="space-username-button" class="ms-3" href="#!">save<i class="fas fa-paper-plane"></i></button>
-            </form>
-            # <h5 id="space-name" class="mb-0"></h5>
-        </div>
-        <div id="space-messages" class="card-body overflow-auto" data-mdb-perfect-scrollbar="true" style="position: relative; height: 400px">
+        <nav class="navbar fixed-top bg-body-tertiary">
+            <div class="container-fluid">
+                <span class="navbar-text ms-auto pe-1">@</span>
+                <span class="navbar-text pe-1">
+                    <h5 id="space-username" class="mb-0"></h5>
+                </span>
+                <form id="space-username-form" hidden style="display: flex" class="px-2">
+                        <input id="space-username-input" type="text" class="form-control me-2" placeholder="" aria-label="username" aria-describedby="space-username-button" />
+                        <button id="space-username-button" class="btn btn-primary">save</button>
+                </form>
+                <span class="navbar-text pe-1">#</span>
+                <span class="navbar-text me-10">
+                    <h5 id="space-name" class="mb-0"></h5>
+                </span>
+            </div>
+        </nav>
+        <div id="space-messages" class="card-body overflow-auto" data-mdb-perfect-scrollbar="true" style="position: relative; height: 400px; padding-top: 50px;">
         </div>
         <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
             <input id="space-send-input" type="text" class="form-control form-control-lg" placeholder="say something!">
-            <button id="space-send-button" class="ms-3" href="#!">send<i class="fas fa-paper-plane"></i></button>
+            <button id="space-send-button" class="btn btn-primary btn-lg ms-3";" href="#!" aria-label="send button"><i class="bi bi-send-fill"></i></button>
         </div>
     </div>
 </main>
@@ -20,7 +28,7 @@
 <template id="space-message-other-template">
     <div class="d-flex flex-row justify-content-start">
         <div>
-            <p class="small p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7;"></p>
+            <p class="small p-2 ms-3 mb-1 rounded-3" style="background: #f5f6f7;"></p>
             <p class="small ms-3 mb-3 rounded-3 text-muted"></p>
         </div>
     </div>

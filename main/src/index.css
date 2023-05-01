@@ -4,4 +4,7 @@ body {
   margin: auto;
   max-width: 38rem;
   padding: 2rem;
+  height: 100vh;
+  background-color: #fbb034;
+  background-image: linear-gradient(315deg, #fbb034 0%, #ffdd00 74%);
 }
