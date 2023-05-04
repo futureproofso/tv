@@ -1,6 +1,4 @@
-# gtfol by [Future Proof](https://futureproof.so)
-
-> "localhost? bump that. i'll get you on prod right now"
+# TV by [Future Proof](https://futureproof.so)
 
 ![build social apps for your community](./assets/banner.png)
 
@@ -14,7 +12,7 @@ fully peer-to-peer and end-to-end encrypted
 
 | Download for Mac (Intel) |
 | ----------- |
-| [![Download gtfol](https://img.shields.io/badge/download-main.zip-blue?style=for-the-badge)](https://github.com/futureproofso/gtfol-app/releases/download/v0.0.2/main-darwin-x64-0.0.2.zip)|
+| [![Download TV](https://img.shields.io/badge/download-main.zip-blue?style=for-the-badge)](https://github.com/futureproofso/TV/releases/download/v0.0.4/main-darwin-x64-0.0.4.zip)|
 
 after downloading, open the `.zip` file, then double click `main.app` you'll get a message saying the developer can not be verified.
 
