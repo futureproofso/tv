@@ -28,7 +28,7 @@ our software empowers technologists of all kinds to build a better web
 
 we've spent the past 2 years teaching people how to build and work in web3/blockchain/dweb
 
-we helped over 30% of our community get paid $ roles in the space
+we helped over 40% of our community get paid $ roles in the space
 
 we grew to 500+ members who are women, people of color, queer, trans, and non-binary folks
 
