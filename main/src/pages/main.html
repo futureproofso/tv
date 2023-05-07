@@ -1,13 +1,19 @@
 <main id="main-template">
 <div class="container template" data-tab="main">
     <div class="form-signin m-auto">
-        <form class="d-flex justify-content-center align-items-center p3">
-            <div class="form-floating">
-                <input id="main-app-name-input" type="text" class="form-control" placeholder="app name">
-                <label for="main-app-name-input">app name</label>
-            </div>
+        <form class="d-flex justify-content-center align-items-center p3 mb-3">
+            <!-- <div class="form-floating"> -->
+                <!-- <input id="main-app-name-input" type="text" class="form-control" placeholder="app name">
+                <label for="main-app-name-input">app name</label> -->
+                <select id="main-app-name-input" disabled class="form-select form-select-lg" aria-label="app name selection">
+                    <option selected>fp</option>
+                </select>
+            <!-- </div> -->
             <button id="main-app-name-button" class="btn btn-lg btn-primary ms-3" type="submit">connect</button>
         </form>
+        <a id="main-reserve-link" class="btn btn-lg glow-on-hover" href="#">
+            reserve your own app name
+        </a>
     </div>
 </div>
 </main>

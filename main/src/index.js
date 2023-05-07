@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView, ipcMain } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, shell } = require('electron');
 const path = require('path');
 
 const Hyperswarm = require('hyperswarm');
@@ -110,6 +110,10 @@ async function main(mainWindow, { isNew, seed }) {
       const message = b4a.from(args, "utf-8");
       conn.write(message);
     });
+  });
+
+  ipcMain.on("open-link", async (event, args) => {
+    shell.openExternal(args);
   });
 }
 
