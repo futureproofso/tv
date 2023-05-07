@@ -4,7 +4,7 @@
 
 ## for you
 
-your own personal chat app
+your own personal social app
 
 fire it up in minutes
 
@@ -12,13 +12,9 @@ fully peer-to-peer and end-to-end encrypted
 
 | Download for Mac (Intel) |
 | ----------- |
-| [![Download TV](https://img.shields.io/badge/download-main.zip-blue?style=for-the-badge)](https://github.com/futureproofso/TV/releases/download/v0.0.4/main-darwin-x64-0.0.4.zip)|
+| [![Download TV](https://img.shields.io/badge/download-TV.zip-blue?style=for-the-badge)](https://github.com/futureproofso/tv/releases/download/v0.0.5/TV-darwin-x64-0.0.5.zip)|
 
-after downloading, open the `.zip` file, then double click `main.app` you'll get a message saying the developer can not be verified.
-
-click "cancel" then go into your securiy and privacy preferences and click "open anyway".
-
-![security and privacy](./assets/security.png)
+after downloading, double click to open the `.zip` file, then drag `TV.app` into your Applications folder, now double click `TV.app`
 
 ## about us
 
