@@ -7,6 +7,8 @@ import goodbye from "graceful-goodbye";
 import Gun from "gun";
 import path from "path";
 
+import { pino, dbLogger, logger, netLogger } from "./log.mjs";
+
 global.Gun = Gun; /// make global to `node --inspect` - debug only
 
 const PORT = 8080;
@@ -20,9 +22,10 @@ const peers = [];
 
 const app = express();
 app.use(Gun.serve);
+app.use(pino);
 
 const web = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  logger.info(`server listening on port (${PORT}) ...`);
 });
 
 resetGun({ file, web, peers });
@@ -34,14 +37,14 @@ function setupNetwork() {
   goodbye(() => swarm.destroy());
 
   const publicKey = b4a.toString(swarm.keyPair.publicKey, "hex");
-  console.log("* publicKey", publicKey, "*");
+  netLogger.info(`swarm configured with publicKey (${publicKey})`);
 
   swarm.on("connection", (stream, peerInfo) => {
     const remotePublicKey = {
       full: b4a.toString(peerInfo.publicKey, "hex"),
       nick: b4a.toString(peerInfo.publicKey, "hex").substring(0, 5),
     };
-    console.log("* swarm.on connection", remotePublicKey.full, "*");
+    netLogger.info(`swarm connected to (${remotePublicKey.full})`);
     const remoteAddress = `http://${stream.rawStream.remoteHost}:1337/gun`;
     peers.push(remoteAddress);
 
@@ -49,17 +52,16 @@ function setupNetwork() {
 
     stream.once("close", () => {
       peers.splice(peers.indexOf(remoteAddress), 1);
-      console.log("* connection close", remotePublicKey.full, "*");
+      netLogger.info(`peer connection closed (${remotePublicKey.full})`);
     });
 
     stream.on("data", async (data) => {
       const body = b4a.toString(data, "utf-8");
-      console.log("* connection data", remotePublicKey.full, ":");
-      console.log(body, "*");
+      netLogger.child({ body }).debug(`peer sent data (${remotePublicKey.full})`);
     });
 
     stream.on("error", (error) => {
-      console.error("* connection error", remotePublicKey.full, error, "*");
+      netLogger.child({ error }).info(`peer connection error (${remotePublicKey.full})`);
     });
   });
 
@@ -69,15 +71,16 @@ function setupNetwork() {
 function joinNetwork(swarm) {
   const topic = createHash("sha256").update(APP_NAME, "utf-8").digest();
   const topicHash = topic.toString("hex");
+  netLogger.debug(`joining topic (${topicHash})`);
   const discovery = swarm.join(topic, { client: true, server: true });
   // The flushed promise will resolve when the topic has been fully announced to the DHT
   discovery
     .flushed()
     .then(() => {
-      console.log("* joined topic:", topicHash, "*");
+      netLogger.info(`joined topic (${topicHash})`);
     })
     .catch((error) => {
-      console.error("* join error", topicHash, error, "*");
+      netLogger.child({ error }).error(`join topic error (${topicHash})`);
     });
 }
 
@@ -89,7 +92,9 @@ function resetGun(config) {
 }
 
 function watchUsernames() {
+  dbLogger.debug("watching usernames ...");
   gun.get(`${APP_NAME}-usernames`).on((data, key) => {
-    console.log("got username:", data);
+    delete data._;
+    dbLogger.debug(data);
   });
 }
