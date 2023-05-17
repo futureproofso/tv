@@ -1,0 +1,18 @@
+{
+  "name": "buoy",
+  "version": "0.0.1",
+  "description": "A buoy service to support communities on tv",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "sticky",
+  "license": "MIT",
+  "dependencies": {
+    "b4a": "^1.6.4",
+    "express": "^4.18.2",
+    "graceful-goodbye": "^1.2.1",
+    "gun": "^0.2020.1239",
+    "hyperswarm": "^4.4.1"
+  }
+}
