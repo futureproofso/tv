@@ -18,7 +18,7 @@ if (require("electron-squirrel-startup")) {
 }
 
 async function main(mainWindow, { seed, isNew }) {
-  const metricsEnabled = await privateDb.getMetricsSelection();
+  const metricsEnabled = process.env.METRICS_ENABLED ? process.env.METRICS_ENABLED == "true" : await privateDb.getMetricsSelection();
   const metrics = new Metrics();
   metrics.setup(metricsEnabled);
 
