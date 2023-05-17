@@ -8,6 +8,7 @@ const Gun = require("gun");
 const path = require("path");
 
 const { pino, dbLogger, logger, netLogger } = require("./log.js");
+const utils = require("./utils.js");
 
 global.Gun = Gun; /// make global to `node --inspect` - debug only
 
@@ -20,6 +21,7 @@ const file = path.resolve("./data");
 const handlers = [];
 let gun;
 const peers = [];
+const peerAddresses = [];
 
 const app = express();
 app.use(Gun.serve);
@@ -28,10 +30,11 @@ const web = app.listen(PORT, () => {
   logger.info(`server listening on port (${PORT}) ...`);
 });
 
-resetGun({ file, web, peers });
+resetGun({ file, web, peerAddresses });
 
-const swarm = setupNetwork();
+const { swarm, publicKey } = setupNetwork();
 joinNetwork(swarm);
+startMessaging(publicKey);
 
 goodbye(() => {
   logger.info("BUOY IS SHUTTING DOWN 👋 ...");
@@ -52,18 +55,20 @@ function setupNetwork() {
   netLogger.info(`swarm configured with publicKey (${publicKey})`);
 
   swarm.on("connection", (stream, peerInfo) => {
+    peers.push(stream);
     const remotePublicKey = {
       full: b4a.toString(peerInfo.publicKey, "hex"),
       nick: b4a.toString(peerInfo.publicKey, "hex").substring(0, 5),
     };
     netLogger.info(`swarm connected to (${remotePublicKey.full})`);
     const remoteAddress = `http://${stream.rawStream.remoteHost}:1337/gun`;
-    peers.push(remoteAddress);
+    peerAddresses.push(remoteAddress);
 
-    resetGun({ file, web, peers });
+    resetGun({ file, web, peerAddresses });
 
     stream.once("close", () => {
-      peers.splice(peers.indexOf(remoteAddress), 1);
+      peerAddresses.splice(peerAddresses.indexOf(remoteAddress), 1);
+      peers.splice(peers.indexOf(stream), 1);
       netLogger.info(`peer connection closed (${remotePublicKey.full})`);
     });
 
@@ -77,7 +82,7 @@ function setupNetwork() {
     });
   });
 
-  return swarm;
+  return { swarm, publicKey };
 }
 
 function joinNetwork(swarm) {
@@ -97,11 +102,32 @@ function joinNetwork(swarm) {
 }
 
 function resetGun(config) {
+  config.peers = config.peerAddresses;
+  delete config.peerAddresses;
+
   gun && gun.off();
   gun = Gun(config);
   global.gun = gun; /// make global to `node --inspect` - debug only
 
   watchUsernames();
+}
+
+async function startMessaging(publicKey) {
+  await utils.delay(1000);
+
+  // publish username
+  gun.get(`${APP_NAME}-usernames`).put({
+    [publicKey]: `buoy.${APP_NAME}`,
+  });
+
+  await utils.delay(1000);
+
+  // message peers
+  process.stdin.on("data", (data) => {
+    peers.forEach((peer) => {
+      peer.write(data);
+    });
+  });
 }
 
 function watchUsernames() {
