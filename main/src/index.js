@@ -32,7 +32,7 @@ async function main(mainWindow, { seed, isNew }) {
 
   ipcMain.on(ipcChannels.SET_SPACE, (event, appName) => {
     mainWindow.setTitle(appName);
-    publicDb.getUsername({ appName, publicKey: network.publicKey }).then((username) => {
+    publicDb.getUsername({ appName, publicKey: network.publicKey }, true).then((username) => {
       const data = { appName, publicKey: network.publicKey, username };
       mainWindow.webContents.send(ipcChannels.GOT_USERNAME, data);
     });

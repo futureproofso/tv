@@ -10,11 +10,12 @@ class Database {
   port;
   peerAddresses;
   db;
-  phoneBook;
+  _phoneBook;
 
   constructor({ port }) {
     this.port = port;
     this.peerAddresses = [];
+    this._phoneBook = {};
   }
 
   setup({ prefix }) {
@@ -42,36 +43,39 @@ class Database {
     this.db.opt({ peers: this.peerAddresses });
   }
 
-  getUsername({ appName, publicKey }) {
-    if (this._phoneBook[publicKey]) {
-      if (this._phoneBook[publicKey].lastUpdated > 0) {
-        return this._phoneBook[publicKey].username;
-      }
+  async getUsername({ appName, publicKey }, bypassPhonebook = false) {
+    if (bypassPhonebook) {
+      return await this._getUsername({ appName, publicKey });
     }
-    this._getUsername({ appName, publicKey });
-    return publicKey;
-  }
 
-  async _getUsername({ appName, publicKey }) {
     let entry = this._phoneBook[publicKey];
-
-    if (entry) {
-      if (entry.username) {
-        return entry.username;
-      } else {
-        if (entry.attempts < 2) {
-          entry.attempts++;
-        } else {
-          return publicKey;
-        }
-      }
-    } else {
+    if (!entry) {
       this._phoneBook[publicKey] = {
         attempts: 1,
       };
       entry = this._phoneBook[publicKey];
     }
 
+    if (entry.username) {
+      return entry.username;
+    } else {
+      if (entry.attempts < 2) {
+        entry.attempts++;
+      } else {
+        return publicKey;
+      }
+    }
+
+    this._getUsername({ appName, publicKey });
+    return publicKey;
+  }
+
+  async _getUsername({ appName, publicKey }) {
+    let entry = this._phoneBook[publicKey];
+    if (!entry) {
+      this._phoneBook[publicKey] = {};
+      entry = this._phoneBook[publicKey];
+    }
     return new Promise((resolve, reject) => {
       this.db.get(`${appName}-usernames`)
         .get(publicKey)
