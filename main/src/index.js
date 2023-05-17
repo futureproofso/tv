@@ -34,6 +34,7 @@ async function main(mainWindow, { seed, isNew }) {
 
     mainWindow.setTitle(appName);
     publicDb.getUsername({ appName, publicKey: network.publicKey }, true).then((username) => {
+      if (!username) { username = network.publicKey };
       const data = { appName, publicKey: network.publicKey, username };
       mainWindow.webContents.send(ipcChannels.GOT_USERNAME, data);
     });
