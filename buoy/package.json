@@ -2,9 +2,11 @@
   "name": "buoy",
   "version": "0.0.1",
   "description": "A buoy service to support communities on tv",
-  "main": "index.mjs",
+  "main": "index.js",
+  "bin": "index.js",
   "scripts": {
-    "start": "node index.mjs",
+    "start": "node index.js",
+    "package": "pkg .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "sticky",
@@ -16,9 +18,10 @@
     "gun": "^0.2020.1239",
     "hyperswarm": "^4.4.1",
     "pino": "^8.14.1",
-    "pino-http": "^8.3.3"
+    "pino-http": "^8.3.3",
+    "pino-pretty": "^10.0.0"
   },
   "devDependencies": {
-    "pino-pretty": "^10.0.0"
+    "pkg": "^5.8.1"
   }
 }

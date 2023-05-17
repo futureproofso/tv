@@ -8,5 +8,5 @@ We recommend using Node.js 18
 
 ```sh
 npm install
-npm start -- <app_name>
+npm start -- <appName>
 ```

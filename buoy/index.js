@@ -1,13 +1,13 @@
-import assert from "assert";
-import b4a from "b4a";
-import { createHash } from "crypto";
-import Hyperswarm from "hyperswarm";
-import express from "express";
-import goodbye from "graceful-goodbye";
-import Gun from "gun";
-import path from "path";
+const assert = require("assert");
+const b4a = require("b4a");
+const { createHash } = require("crypto");
+const Hyperswarm = require("hyperswarm");
+const express = require("express");
+const goodbye = require("graceful-goodbye");
+const Gun = require("gun");
+const path = require("path");
 
-import { pino, dbLogger, logger, netLogger } from "./log.mjs";
+const { pino, dbLogger, logger, netLogger } = require("./log.js");
 
 global.Gun = Gun; /// make global to `node --inspect` - debug only
 
@@ -17,24 +17,36 @@ const APP_NAME = process.argv[2];
 assert(APP_NAME, "Missing APP_NAME. Did you pass it as a process argument?");
 const file = path.resolve("./data");
 
+const handlers = [];
 let gun;
 const peers = [];
 
 const app = express();
 app.use(Gun.serve);
 app.use(pino);
-
 const web = app.listen(PORT, () => {
   logger.info(`server listening on port (${PORT}) ...`);
 });
 
 resetGun({ file, web, peers });
+
 const swarm = setupNetwork();
 joinNetwork(swarm);
 
+goodbye(() => {
+  logger.info("BUOY IS SHUTTING DOWN 👋 ...");
+  swarm.destroy();
+  web.close((err) => {
+    gun && gun.off();
+    if (err) {
+      logger.error(err);
+      process.exit();
+    }
+  });
+});
+
 function setupNetwork() {
   const swarm = new Hyperswarm({ maxPeers: 31 });
-  goodbye(() => swarm.destroy());
 
   const publicKey = b4a.toString(swarm.keyPair.publicKey, "hex");
   netLogger.info(`swarm configured with publicKey (${publicKey})`);
@@ -85,6 +97,7 @@ function joinNetwork(swarm) {
 }
 
 function resetGun(config) {
+  gun && gun.off();
   gun = Gun(config);
   global.gun = gun; /// make global to `node --inspect` - debug only
 
@@ -93,8 +106,10 @@ function resetGun(config) {
 
 function watchUsernames() {
   dbLogger.debug("watching usernames ...");
-  gun.get(`${APP_NAME}-usernames`).on((data, key) => {
+  function handler(data, key) {
     delete data._;
     dbLogger.debug(data);
-  });
+  }
+  gun.get(`${APP_NAME}-usernames`).on(handler);
+  return handler;
 }
