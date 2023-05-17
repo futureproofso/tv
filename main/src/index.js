@@ -28,9 +28,10 @@ async function main(mainWindow, { seed, isNew }) {
   const network = new Network({ seed, db: publicDb, gui: mainWindow.webContents });
 
   publicDb.setup({ prefix: network.publicKey });
-  network.setup();
 
   ipcMain.on(ipcChannels.SET_SPACE, (event, appName) => {
+    network.setup(appName);
+
     mainWindow.setTitle(appName);
     publicDb.getUsername({ appName, publicKey: network.publicKey }, true).then((username) => {
       const data = { appName, publicKey: network.publicKey, username };
