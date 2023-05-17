@@ -1,7 +1,8 @@
 const Hyperswarm = require("hyperswarm");
 const goodbye = require("graceful-goodbye");
 const b4a = require("b4a");
-const { ipcChannels } = require("../renderer/channels").default;
+const ipcChannels = require("../renderer/channels").default;
+const { createHash } = require("crypto");
 
 class Network {
   swarm;
@@ -43,9 +44,9 @@ class Network {
       });
 
       stream.on("data", async (data) => {
-        console.log("* connection data", remotePublicKey.full, data, "*");
+        console.log("* connection data", remotePublicKey.full, data.length, "*");
         const message = this.handleMessage(data, remotePublicKey.full);
-        this.gui.send(ipcChannels.GOT_MESSAGE, JSON.stringify(message));
+        this.gui.send(ipcChannels.GOT_MESSAGE, message);
       });
 
       stream.on("error", (error) => {
@@ -69,11 +70,12 @@ class Network {
       });
   }
 
-  handleMessage(message, from) {
+  async handleMessage(message, senderPublicKey) {
     const body = b4a.toString(message, "utf-8");
     const id = createHash("md5")
-      .update(`f:${from}:b:${message}:t:${Date.now()}`)
+      .update(`f:${senderPublicKey}:b:${message}:t:${Date.now()}`)
       .digest("hex");
+    const from = this.db.getUsername({appName, publicKey: senderPublicKey });
     return { from, id, body };
   }
 

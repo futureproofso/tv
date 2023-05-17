@@ -45,17 +45,15 @@ sendButton.addEventListener('click', (e) => {
 });
 
 window.electron.ipcRenderer.on(ipcChannels.GOT_USERNAME, (data) => {
-  console.log('got username in gui', data);
   username.innerText = data.username.substring(0, 10);
   usernameInput.setAttribute('placeholder', data.username);
 });
 
 window.electron.ipcRenderer.on(ipcChannels.GOT_MESSAGE, (data) => {
-  const contents = JSON.parse(data);
   const clone = messageOtherTemplate.content.cloneNode(true);
   let p = clone.querySelectorAll("p");
-  p[0].innerText = contents.message;
-  p[1].innerText = contents.from.substring(0, 7);
+  p[0].innerText = data.body;
+  p[1].innerText = data.from.substring(0, 7);
   messages.appendChild(clone);
   messages.lastElementChild.scrollIntoView();
 });

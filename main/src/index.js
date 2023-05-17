@@ -3,9 +3,7 @@ const path = require("path");
 
 require("dotenv").config({ path: path.resolve(app.getAppPath(), ".env.prod") });
 
-const b4a = require("b4a");
 const { createHash } = require("crypto");
-const { Sequelize } = require("sequelize");
 
 require("./db/setup").setup();
 const privateDb = require("./db/private");

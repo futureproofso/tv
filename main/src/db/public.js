@@ -1,8 +1,5 @@
 const path = require("path");
 
-const Hyperswarm = require("hyperswarm");
-const goodbye = require("graceful-goodbye");
-const b4a = require("b4a");
 const Gun = require("gun");
 
 const { directory } = require("./setup");
@@ -13,6 +10,7 @@ class Database {
   port;
   peerAddresses;
   db;
+  phoneBook;
 
   constructor({ port }) {
     this.port = port;
@@ -44,11 +42,42 @@ class Database {
     this.db.opt({ peers: this.peerAddresses });
   }
 
-  async getUsername({ appName, publicKey }) {
+  getUsername({ appName, publicKey }) {
+    if (this._phoneBook[publicKey]) {
+      if (this._phoneBook[publicKey].lastUpdated > 0) {
+        return this._phoneBook[publicKey].username;
+      }
+    }
+    this._getUsername({ appName, publicKey });
+    return publicKey;
+  }
+
+  async _getUsername({ appName, publicKey }) {
+    let entry = this._phoneBook[publicKey];
+
+    if (entry) {
+      if (entry.username) {
+        return entry.username;
+      } else {
+        if (entry.attempts < 2) {
+          entry.attempts++;
+        } else {
+          return publicKey;
+        }
+      }
+    } else {
+      this._phoneBook[publicKey] = {
+        attempts: 1,
+      };
+      entry = this._phoneBook[publicKey];
+    }
+
     return new Promise((resolve, reject) => {
       this.db.get(`${appName}-usernames`)
         .get(publicKey)
         .once((value) => {
+          entry.username = value;
+          entry.lastUpdated = Date.now();
           resolve(value);
         });
     });
