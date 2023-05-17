@@ -1,0 +1,10 @@
+const ipcChannels = {
+  GOT_MESSAGE: "GOT_MESSAGE",
+  SEND_MESSAGE: "SEND_MESSAGE",
+  GOT_USERNAME: "GOT_USERNAME",
+  SET_USERNAME: "SET_USERNAME",
+  OPEN_LINK: "OPEN_LINK",
+  SET_SPACE: "SET_SPACE"
+};
+
+exports.default = ipcChannels;

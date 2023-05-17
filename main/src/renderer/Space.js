@@ -9,12 +9,6 @@ const messages = document.getElementById('space-messages');
 const messageOtherTemplate = document.getElementById('space-message-other-template')
 const messageSelfTemplate = document.getElementById('space-message-self-template');
 
-window.electron.ipcRenderer.on('got-username', (appName, value) => {
-  console.log('got-username handler', appName, value);
-  username.innerText = value.substring(0, 10);
-  usernameInput.setAttribute('placeholder', value);
-});
-
 username.addEventListener('click', (e) => {
   e.preventDefault();
 
@@ -27,11 +21,11 @@ usernameButton.addEventListener('click', (e) => {
   let nextUsername = usernameInput.value;
   if (nextUsername && nextUsername != '') {
     window.electron.ipcRenderer.sendMessage(
-      'set-username',
-      JSON.stringify({
+      ipcChannels.SET_USERNAME,
+      {
         appName: spaceName.innerText,
         username: nextUsername
-      })
+      }
     );
   }
   usernameForm.setAttribute('hidden', true);
@@ -40,7 +34,7 @@ usernameButton.addEventListener('click', (e) => {
 
 sendButton.addEventListener('click', (e) => {
   e.preventDefault();
-  window.electron.ipcRenderer.sendMessage('send-message', sendInput.value);
+  window.electron.ipcRenderer.sendMessage(ipcChannels.SEND_MESSAGE, sendInput.value);
 
   const clone = messageSelfTemplate.content.cloneNode(true);
   let p = clone.querySelectorAll("p");
@@ -50,8 +44,14 @@ sendButton.addEventListener('click', (e) => {
   sendInput.value = "";
 });
 
-window.electron.ipcRenderer.on('got-message', (value) => {
-  const contents = JSON.parse(value);
+window.electron.ipcRenderer.on(ipcChannels.GOT_USERNAME, (data) => {
+  console.log('got username in gui', data);
+  username.innerText = data.username.substring(0, 10);
+  usernameInput.setAttribute('placeholder', data.username);
+});
+
+window.electron.ipcRenderer.on(ipcChannels.GOT_MESSAGE, (data) => {
+  const contents = JSON.parse(data);
   const clone = messageOtherTemplate.content.cloneNode(true);
   let p = clone.querySelectorAll("p");
   p[0].innerText = contents.message;

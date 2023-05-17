@@ -1,118 +1,57 @@
-const { app, BrowserWindow, BrowserView, ipcMain, shell } = require('electron');
-const path = require('path');
+const { app, BrowserWindow, ipcMain, shell, contextBridge } = require("electron");
+const path = require("path");
 
-const Hyperswarm = require('hyperswarm');
-const goodbye = require('graceful-goodbye');
-const b4a = require('b4a');
+require("dotenv").config({ path: path.resolve(app.getAppPath(), ".env.prod") });
+
+const b4a = require("b4a");
 const { createHash } = require("crypto");
-const { Sequelize } = require('sequelize');
+const { Sequelize } = require("sequelize");
 
-require('./db/setup').setup();
-const privateDb = require('./db/private');
+require("./db/setup").setup();
+const privateDb = require("./db/private");
+const { PublicDb } = require("./db/public");
+const { Network } = require("./p2p/network");
+const { Metrics } = require("./metrics");
+const ipcChannels = require("./renderer/channels").default;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
+if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-const usernameCache = {};
+async function main(mainWindow, { seed, isNew }) {
+  const metricsEnabled = await privateDb.getMetricsSelection();
+  const metrics = new Metrics();
+  metrics.setup(metricsEnabled);
 
-async function main(mainWindow, { isNew, seed }) {
-  // const p2p = new BrowserView({
-  //   webPreferences: {
-  //     preload: path.join(__dirname, 'p2p/preload.js'),
-  //   },
-  // });
-  const swarm = new Hyperswarm({ seed: b4a.from(seed, 'hex'), maxPeers: 31 });
+  metrics.userLoggedIn("val_test");
 
-  const peerPublicKey = b4a.toString(swarm.keyPair.publicKey, 'hex');
-  console.log('peer public key:', peerPublicKey);
+  const publicDb = new PublicDb({ port: 1337 });
+  const network = new Network({ seed, db: publicDb, gui: mainWindow.webContents });
 
-  goodbye(() => swarm.destroy());
+  publicDb.setup({ prefix: network.publicKey });
+  network.setup();
 
-  mainWindow.webContents.send('got-username', null, peerPublicKey);
-
-  // Keep track of all connections and console.log incoming data
-  const conns = [];
-  swarm.on("connection", (conn) => {
-    const remotePublicKey = b4a.toString(conn.remotePublicKey, "hex");
-    console.log("* got a connection from:", remotePublicKey, "*");
-    conns.push(conn);
-
-    conn.once("close", () => conns.splice(conns.indexOf(conn), 1));
-
-    conn.on("data", async (data) => {
-      const message = b4a.toString(data, "utf-8");
-      const id = createHash("md5")
-        .update(`n:${remotePublicKey}:m:${message}:t:${Date.now()}`)
-        .digest("hex");
-
-      if (!usernameCache[remotePublicKey]) {
-        usernameCache[remotePublicKey] = {
-          username: undefined,
-          lookupAttempts: 0
-        }
-      }
-      if (
-        !usernameCache[remotePublicKey].username
-        && usernameCache[remotePublicKey].lookupAttempts < 2
-      ) {
-        usernameCache[remotePublicKey].lookupAttempts++;
-        const data = await swarm.dht.mutableGet(conn.remotePublicKey);
-        usernameCache[remotePublicKey].username = data.value.toString('utf8');
-      }
-
-      mainWindow.webContents.send('got-message', JSON.stringify({
-          id,
-          from: usernameCache[remotePublicKey].username || remotePublicKey,
-          message
-        })
-      );
-    });
-
-    conn.on("error", console.error);
-  });
-
-  ipcMain.on('set-space', (event, appName) => {
+  ipcMain.on(ipcChannels.SET_SPACE, (event, appName) => {
     mainWindow.setTitle(appName);
+    publicDb.getUsername({ appName, publicKey: network.publicKey }).then((username) => {
+      const data = { appName, publicKey: network.publicKey, username };
+      mainWindow.webContents.send(ipcChannels.GOT_USERNAME, data);
+    });
     const topic = createHash("sha256").update(appName, "utf-8").digest();
-    const discovery = swarm.join(topic, { client: true, server: true });
-    // The flushed promise will resolve when the topic has been fully announced to the DHT
-    discovery
-      .flushed()
-      .then(() => {
-        console.log("joined topic:", topic.toString("hex"));
-        const metadata = {
-          topic: topic.toString("hex"),
-          appName,
-          error: null,
-          config: null, // get this from db
-        };
-      })
-      .catch(console.error);
+    network.join(topic);
   });
 
-  ipcMain.on('set-username', (event, data) => {
-    const { appName, username } = JSON.parse(data);
-    console.log('setting username...')
-    console.log('appName:', appName)
-    console.log('username:', username)
-    privateDb.setUsername(appName, username);
-    // TODO: different keys for each app
-    swarm.dht.mutablePut(swarm.keyPair, Buffer.from(username)).then(() => {
-      console.log('published username');
-    });
-    mainWindow.webContents.send('got-username', appName, username);
+  ipcMain.on(ipcChannels.SET_USERNAME, async (event, data) => {
+    publicDb.publishUsername({ appName: data.appName, publicKey: network.publicKey, username: data.username });
+    mainWindow.webContents.send(ipcChannels.GOT_USERNAME, data);
   });
 
-  ipcMain.on("send-message", async (event, args) => {
-    conns.forEach((conn) => {
-      const message = b4a.from(args, "utf-8");
-      conn.write(message);
-    });
+  ipcMain.on(ipcChannels.SEND_MESSAGE, async (event, data) => {
+    network.messagePeers(data);
   });
 
-  ipcMain.on("open-link", async (event, args) => {
+  ipcMain.on(ipcChannels.OPEN_LINK, async (event, args) => {
     shell.openExternal(args);
   });
 }
@@ -123,24 +62,25 @@ const createWindow = () => {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, "preload.js"),
     },
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, 'index.html')).then(() => {
-    privateDb.setup().then(async () => {
-      const {seed, created} = await privateDb.getSeed()
-      main(mainWindow, { isNew: created, seed }).then(() => {
-        console.log('main complete');
-      }).catch((err) => {
-        console.error('caught from main', err);
+  mainWindow.loadFile(path.join(__dirname, "index.html")).then(() => {
+    privateDb
+      .setup()
+      .then(async () => {
+        const { seed, created } = await privateDb.getSeed();
+        main(mainWindow, { seed, isNew: created }).catch((error) => {
+          console.error(error);
+          app.quit();
+        });
+      })
+      .catch((error) => {
+        console.error(error);
         app.quit();
       });
-    }).catch((error) => {
-      console.error(error);
-      app.quit();
-    });
   });
 
   // Open the DevTools.
@@ -150,20 +90,20 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
+app.on("ready", async () => {
   createWindow();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
-app.on('activate', () => {
+app.on("activate", () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {

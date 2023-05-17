@@ -7,7 +7,7 @@ const reserveLink = document.getElementById('main-reserve-link');
 button.addEventListener('click', (e) => {
   e.preventDefault();
   const text = input.selectedOptions[0].text;
-  window.electron.ipcRenderer.sendMessage('set-space', text);
+  window.electron.ipcRenderer.sendMessage(ipcChannels.SET_SPACE, text);
   mainTemplate.setAttribute('hidden', true);
   spaceTemplate.removeAttribute('hidden');
   const spaceName = document.getElementById('space-name');
@@ -17,5 +17,5 @@ button.addEventListener('click', (e) => {
 
 reserveLink.addEventListener('click', (e) => {
   e.preventDefault();
-  window.electron.ipcRenderer.sendMessage('open-link', 'https://futureproof.ck.page/tv-reservation');
+  window.electron.ipcRenderer.sendMessage(ipcChannels.OPEN_LINK, 'https://futureproof.ck.page/tv-reservation');
 });

@@ -10,7 +10,11 @@ const db = new Sequelize({
 });
 
 const Account = db.define('Account', {
-  seed: DataTypes.TEXT
+  seed: DataTypes.TEXT,
+});
+
+const Settings = db.define('Settings', {
+  metricsEnabled: DataTypes.BOOLEAN
 });
 
 const Username = db.define('Username', {
@@ -20,7 +24,15 @@ const Username = db.define('Username', {
 
 async function setup() {
   // remove for prod and handle schema migrations.
-  await db.sync({ force: true });
+  await db.sync({ force: false });
+}
+
+async function getMetricsSelection() {
+  const [row] = await Settings.findOrCreate({
+    where: {id: 1},
+    defaults: { metricsEnabled: true }
+  });
+  return { metricsEnabled: row.metricsEnabled };
 }
 
 async function getSeed() {
@@ -39,6 +51,7 @@ async function setUsername(appName, username) {
 }
 
 module.exports = {
+  getMetricsSelection,
   getSeed,
   setup,
   setUsername

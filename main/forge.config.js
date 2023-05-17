@@ -1,6 +1,6 @@
 module.exports = {
   packagerConfig: {
-    ignore: ['test', 'storage', 'moment-timezone-data'],
+    ignore: ['test', 'storage', 'moment-timezone-data', '.env'],
     prune: true,
     osxSign: {},
     osxNotarize: {

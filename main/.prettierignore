@@ -1,0 +1,19 @@
+# Ignore everything
+*
+
+# Except JavaScript files
+# !*.js
+!src
+!src/**
+src/renderer/bundle
+src/pages/bundle
+!src/**/*.js
+
+!test
+!test/**
+test/storage
+!test/*.mjs
+
+*.html
+*.css
+*.json
