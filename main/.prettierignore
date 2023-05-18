@@ -3,6 +3,7 @@
 
 # Except JavaScript files
 # !*.js
+!forge.config.js
 !src
 !src/**
 src/renderer/bundle

@@ -1,7 +1,7 @@
 {
   "name": "TV",
   "productName": "TV",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "src/index.js",
   "scripts": {
     "start": "grunt && rollup -c && electron-forge start",
@@ -21,7 +21,6 @@
     "b4a": "^1.6.3",
     "bootstrap": "^5.3.0-alpha3",
     "dotenv": "^16.0.3",
-    "electron-rebuild": "^3.2.9",
     "electron-squirrel-startup": "^1.0.0",
     "graceful-goodbye": "^1.2.1",
     "gun": "^0.2020.1239",
