@@ -44,3 +44,5 @@ dm us [@futureproofso](https://twitter.com/futureproofso) about
 ----
 
 [license](./LICENSE) and [terms](./TERMS)
+
+![diagram](./assets/tv-diagram-01.png)
