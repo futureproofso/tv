@@ -3,6 +3,7 @@ const { promises: fs } = require("fs");
 
 const env = require('./env.js');
 
+const forceRebuildConfig = process.env.NODE_ENV == "production";
 const identity = env.APPLE_CODESIGN_IDENTITY;
 const appleId = env.APPLE_ID;
 const appleIdPassword = env.APPLE_PASSWORD;
@@ -49,7 +50,7 @@ module.exports = {
     },
   },
   rebuildConfig: {
-    force: true,
+    force: forceRebuildConfig
   },
   makers: [
     {

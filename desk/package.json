@@ -5,9 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "grunt && rollup -c && electron-forge start",
-    "package": "grunt && rollup -c && electron-forge package",
+    "package": "NODE_ENV=production grunt && rollup -c && electron-forge package",
     "make": "grunt && rollup -c && electron-forge make",
-    "publish": "grunt && rollup -c && electron-forge publish",
+    "publish": "NODE_ENV=production grunt && rollup -c && electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
   "keywords": [],
