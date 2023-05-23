@@ -42,7 +42,6 @@ class Metrics {
   }
 
   userLoggedIn(id) {
-    // this.writeClient.writePoint(metricsData.USER_LOGIN(network.publicKey));
     this.writeClient.writePoint(dataPoints.USER_LOGIN(id));
     this.writeClient.flush();
   }

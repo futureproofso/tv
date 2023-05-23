@@ -32,7 +32,7 @@ async function getMetricsSelection() {
     where: {id: 1},
     defaults: { metricsEnabled: true }
   });
-  return { metricsEnabled: row.metricsEnabled };
+  return row.metricsEnabled;
 }
 
 async function getSeed() {

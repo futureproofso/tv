@@ -22,10 +22,9 @@ async function main(mainWindow, { seed, isNew }) {
   const metrics = new Metrics();
   metrics.setup(metricsEnabled);
 
-  metrics.userLoggedIn("val_test");
-
   const publicDb = new PublicDb({ port: 1337 });
   const network = new Network({ seed, db: publicDb, gui: mainWindow.webContents });
+  metrics.userLoggedIn(network.publicKey);
 
   publicDb.setup({ prefix: network.publicKey });
 
