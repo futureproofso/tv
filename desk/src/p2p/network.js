@@ -51,8 +51,16 @@ class Network {
       });
 
       stream.on("data", async (data) => {
-        console.log("* connection data", remotePublicKey.full, data.length, "*");
-        const message = await this.handleMessage({ senderPublicKey: remotePublicKey.full, message: data });
+        console.log(
+          "* connection data",
+          remotePublicKey.full,
+          data.length,
+          "*"
+        );
+        const message = await this.handleMessage({
+          senderPublicKey: remotePublicKey.full,
+          message: data,
+        });
         this.gui.send(ipcChannels.GOT_MESSAGE, message);
       });
 
@@ -82,12 +90,15 @@ class Network {
       });
   }
 
-  async handleMessage({senderPublicKey, message}) {
+  async handleMessage({ senderPublicKey, message }) {
     const body = b4a.toString(message, "utf-8");
     const id = createHash("md5")
       .update(`f:${senderPublicKey}:b:${message}:t:${Date.now()}`)
       .digest("hex");
-    const from = await this.db.getUsername({appName: this.appName, publicKey: senderPublicKey });
+    const from = await this.db.getUsername({
+      appName: this.appName,
+      publicKey: senderPublicKey,
+    });
     return { from, id, body };
   }
 

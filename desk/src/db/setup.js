@@ -1,17 +1,17 @@
-const { mkdirSync } = require('fs');
-const path = require('path');
-const { app } = require('electron');
+const { mkdirSync } = require("fs");
+const path = require("path");
+const { app } = require("electron");
 
-const directory = path.resolve(app.getAppPath(), 'storage');
+const directory = path.resolve(app.getAppPath(), "storage");
 
 function setup() {
   try {
     mkdirSync(directory);
   } catch (error) {
-    if (error.code === 'EEXIST') {
+    if (error.code === "EEXIST") {
       // pass
     } else {
-      throw error
+      throw error;
     }
   }
   return directory;
@@ -19,5 +19,5 @@ function setup() {
 
 module.exports = {
   directory,
-  setup
-}
+  setup,
+};

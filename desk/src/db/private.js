@@ -1,25 +1,25 @@
-const path = require('path');
-const { Sequelize, Model, DataTypes } = require('sequelize');
+const path = require("path");
+const { Sequelize, Model, DataTypes } = require("sequelize");
 const crypto = require("hypercore-crypto");
-const { directory } = require('./setup');
+const { directory } = require("./setup");
 
 const db = new Sequelize({
-  dialect: 'sqlite',
-  storage: path.resolve(directory, 'private.sqlite'), // this can fail without throwing an error
-  logging: false
+  dialect: "sqlite",
+  storage: path.resolve(directory, "private.sqlite"), // this can fail without throwing an error
+  logging: false,
 });
 
-const Account = db.define('Account', {
+const Account = db.define("Account", {
   seed: DataTypes.TEXT,
 });
 
-const Settings = db.define('Settings', {
-  metricsEnabled: DataTypes.BOOLEAN
+const Settings = db.define("Settings", {
+  metricsEnabled: DataTypes.BOOLEAN,
 });
 
-const Username = db.define('Username', {
+const Username = db.define("Username", {
   appName: DataTypes.TEXT,
-  username: DataTypes.TEXT
+  username: DataTypes.TEXT,
 });
 
 async function setup() {
@@ -29,24 +29,24 @@ async function setup() {
 
 async function getMetricsSelection() {
   const [row] = await Settings.findOrCreate({
-    where: {id: 1},
-    defaults: { metricsEnabled: true }
+    where: { id: 1 },
+    defaults: { metricsEnabled: true },
   });
   return row.metricsEnabled;
 }
 
 async function getSeed() {
   const [row, created] = await Account.findOrCreate({
-    where: {id: 1},
-    defaults: { seed: crypto.randomBytes(32).toString("hex") }
-  })
+    where: { id: 1 },
+    defaults: { seed: crypto.randomBytes(32).toString("hex") },
+  });
   return { seed: row.seed, created };
 }
 
 async function setUsername(appName, username) {
   const [row, _] = await Username.upsert({
     appName,
-    username
+    username,
   });
 }
 
@@ -54,5 +54,5 @@ module.exports = {
   getMetricsSelection,
   getSeed,
   setup,
-  setUsername
+  setUsername,
 };

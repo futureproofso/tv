@@ -77,7 +77,8 @@ class Database {
       entry = this._phoneBook[publicKey];
     }
     return new Promise((resolve, reject) => {
-      this.db.get(`${appName}-usernames`)
+      this.db
+        .get(`${appName}-usernames`)
         .get(publicKey)
         .once((value) => {
           entry.username = value;

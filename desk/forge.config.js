@@ -1,7 +1,7 @@
 const path = require("path");
 const { promises: fs } = require("fs");
 
-const env = require('./env.js');
+const env = require("./env.js");
 
 const forceRebuildConfig = process.env.NODE_ENV == "production";
 const identity = env.APPLE_CODESIGN_IDENTITY;
@@ -40,7 +40,7 @@ module.exports = {
     ],
     prune: true,
     osxSign: {
-      identity
+      identity,
     },
     osxNotarize: {
       tool: "notarytool",
@@ -50,7 +50,7 @@ module.exports = {
     },
   },
   rebuildConfig: {
-    force: forceRebuildConfig
+    force: forceRebuildConfig,
   },
   makers: [
     {

@@ -1,4 +1,10 @@
-const { app, BrowserWindow, ipcMain, shell, contextBridge } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  shell,
+  contextBridge,
+} = require("electron");
 const path = require("path");
 
 require("dotenv").config({ path: path.resolve(app.getAppPath(), ".env.prod") });
@@ -18,12 +24,18 @@ if (require("electron-squirrel-startup")) {
 }
 
 async function main(mainWindow, { seed, isNew }) {
-  const metricsEnabled = process.env.METRICS_ENABLED ? process.env.METRICS_ENABLED == "true" : await privateDb.getMetricsSelection();
+  const metricsEnabled = process.env.METRICS_ENABLED
+    ? process.env.METRICS_ENABLED == "true"
+    : await privateDb.getMetricsSelection();
   const metrics = new Metrics();
   metrics.setup(metricsEnabled);
 
   const publicDb = new PublicDb({ port: 1337 });
-  const network = new Network({ seed, db: publicDb, gui: mainWindow.webContents });
+  const network = new Network({
+    seed,
+    db: publicDb,
+    gui: mainWindow.webContents,
+  });
   metrics.userLoggedIn(network.publicKey);
 
   publicDb.setup({ prefix: network.publicKey });
@@ -32,17 +44,25 @@ async function main(mainWindow, { seed, isNew }) {
     network.setup(appName);
 
     mainWindow.setTitle(appName);
-    publicDb.getUsername({ appName, publicKey: network.publicKey }, true).then((username) => {
-      if (!username) { username = network.publicKey };
-      const data = { appName, publicKey: network.publicKey, username };
-      mainWindow.webContents.send(ipcChannels.GOT_USERNAME, data);
-    });
+    publicDb
+      .getUsername({ appName, publicKey: network.publicKey }, true)
+      .then((username) => {
+        if (!username) {
+          username = network.publicKey;
+        }
+        const data = { appName, publicKey: network.publicKey, username };
+        mainWindow.webContents.send(ipcChannels.GOT_USERNAME, data);
+      });
     const topic = createHash("sha256").update(appName, "utf-8").digest();
     network.join(topic);
   });
 
   ipcMain.on(ipcChannels.SET_USERNAME, async (event, data) => {
-    publicDb.publishUsername({ appName: data.appName, publicKey: network.publicKey, username: data.username });
+    publicDb.publishUsername({
+      appName: data.appName,
+      publicKey: network.publicKey,
+      username: data.username,
+    });
     mainWindow.webContents.send(ipcChannels.GOT_USERNAME, data);
   });
 
