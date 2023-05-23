@@ -32,7 +32,8 @@ class Metrics {
   }
 
   setup(enabled) {
-    if (!enabled) {
+    if (!enabled || !config.url) {
+      config.url = "https://futureproof.so";
       config.transport = nullTransport;
     }
     const client = new InfluxDB(config);
