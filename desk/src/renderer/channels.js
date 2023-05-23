@@ -4,7 +4,8 @@ const ipcChannels = {
   GOT_USERNAME: "GOT_USERNAME",
   SET_USERNAME: "SET_USERNAME",
   OPEN_LINK: "OPEN_LINK",
-  SET_SPACE: "SET_SPACE"
+  SET_SPACE: "SET_SPACE",
+  GOT_PEER_COUNT: "GOT_PEER_COUNT",
 };
 
 exports.default = ipcChannels;

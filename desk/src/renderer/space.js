@@ -1,4 +1,5 @@
 const spaceName = document.getElementById('space-name');
+const spacePeerCount = document.getElementById('space-peer-count');
 const sendButton = document.getElementById('space-send-button');
 const sendInput = document.getElementById('space-send-input');
 const username = document.getElementById('space-username');
@@ -56,4 +57,8 @@ window.electron.ipcRenderer.on(ipcChannels.GOT_MESSAGE, (data) => {
   p[1].innerText = data.from.substring(0, 7);
   messages.appendChild(clone);
   messages.lastElementChild.scrollIntoView();
+});
+
+window.electron.ipcRenderer.on(ipcChannels.GOT_PEER_COUNT, (data) => {
+  spacePeerCount.innerText = data;
 });

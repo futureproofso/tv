@@ -28,7 +28,7 @@ class Database {
     this.db = Gun({ file, web: server });
   }
 
-  addPeer({ remotePublicKey, remoteHost }) {
+  addSyncPeer({ remotePublicKey, remoteHost }) {
     // This will break if we have multiple peers behind a single host
     // They need to use different db ports and tell their peers which port they
     // are using
@@ -37,7 +37,7 @@ class Database {
     this.db.opt({ peers: this.peerAddresses });
   }
 
-  removePeer({ remotePublicKey, remoteHost }) {
+  removeSyncPeer({ remotePublicKey, remoteHost }) {
     // Only remove if there are no peers left behind this host
     this.peerAddresses.splice(this.peerAddresses.indexOf(remoteHost), 1);
     this.db.opt({ peers: this.peerAddresses });

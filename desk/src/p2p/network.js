@@ -11,6 +11,7 @@ class Network {
   db;
   gui;
   appName;
+  peerCountInterval;
 
   constructor({ seed, db, gui }) {
     const swarmConfig = {
@@ -22,7 +23,11 @@ class Network {
     this.swarm = new Hyperswarm(swarmConfig);
     this.publicKey = b4a.toString(this.swarm.keyPair.publicKey, "hex");
     console.log("* swarm publicKey", this.publicKey, "*");
-    goodbye(() => this.swarm.destroy());
+    goodbye(() => {
+      clearInterval(this.peerCountInterval);
+      this.swarm.destroy();
+    });
+    this.peerCountInterval = this.startPeerCountInterval();
   }
 
   setup(appName) {
@@ -38,12 +43,11 @@ class Network {
 
       this.peers.push(stream);
 
-      this.db.addPeer({ remotePublicKey, remoteHost });
+      this.db.addSyncPeer({ remotePublicKey, remoteHost });
 
       stream.once("close", () => {
         console.log("* connection close", remotePublicKey.full, "*");
-        this.peers.splice(this.peers.indexOf(stream), 1);
-        this.db.removePeer({ remotePublicKey, remoteHost });
+        this.removePeer(stream, remotePublicKey, remoteHost);
       });
 
       stream.on("data", async (data) => {
@@ -54,9 +58,14 @@ class Network {
 
       stream.on("error", (error) => {
         console.error("* connection error", remotePublicKey.full, error, "*");
-        // call function to do error handling
+        this.removePeer(stream, remotePublicKey, remoteHost);
       });
     });
+  }
+
+  removePeer(stream, remotePublicKey, remoteHost) {
+    this.peers.splice(this.peers.indexOf(stream), 1);
+    this.db.removeSyncPeer({ remotePublicKey, remoteHost });
   }
 
   join(topic) {
@@ -88,8 +97,19 @@ class Network {
     });
   }
 
+  startPeerCountInterval() {
+    const threeSeconds = 3000;
+    return setInterval(() => {
+      this.gui.send(ipcChannels.GOT_PEER_COUNT, this.peerCount());
+    }, threeSeconds);
+  }
+
+  /**
+   * Peers connected to the network topic (including self)
+   * @returns Number of peers connected
+   */
   peerCount() {
-    return this.peers.length;
+    return 1 + this.peers.length;
   }
 }
 
