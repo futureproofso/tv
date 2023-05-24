@@ -12,7 +12,7 @@ fully peer-to-peer and end-to-end encrypted
 
 | Download for Mac (Intel) |
 | ----------- |
-| [![Download TV](https://img.shields.io/badge/download-TV.zip-blue?style=for-the-badge)](https://github.com/futureproofso/tv/releases/download/v0.0.6/TV-darwin-x64-0.0.6.zip)|
+| [![Download TV](https://img.shields.io/badge/download-TV.zip-blue?style=for-the-badge)](https://github.com/futureproofso/tv/releases/download/v0.0.7/TV-darwin-x64-0.0.7.zip)|
 
 after downloading, double click to open the `.zip` file, then drag `TV.app` into your Applications folder, now double click `TV.app`
 
